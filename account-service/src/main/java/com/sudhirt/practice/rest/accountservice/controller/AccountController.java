@@ -26,23 +26,23 @@ public class AccountController {
 	}
 
 	@GetMapping
-	List<Account> getAll() {
-		List<Account> accounts = accountService.getAll();
-		return accounts;
+	public List<Account> getAll() {
+		return accountService.getAll();
 	}
 
 	@GetMapping("/{accountNumber}")
-	Account get(@PathVariable String accountNumber) {
+	public Account get(@PathVariable String accountNumber) {
 		return accountService.get(accountNumber);
 	}
 
 	@GetMapping("/{accountNumber}/transactions")
-	List<Transaction> getTransactions(@PathVariable String accountNumber) {
+	public List<Transaction> getTransactions(@PathVariable String accountNumber) {
 		return accountService.getTransactions(accountNumber);
 	}
 
 	@PostMapping("/{accountNumber}/transactions")
-	ResponseEntity<?> addTransaction(@PathVariable String accountNumber, @RequestBody Transaction transaction) {
+	public ResponseEntity<String> addTransaction(@PathVariable String accountNumber,
+			@RequestBody Transaction transaction) {
 		transaction.setAccount(Account.builder().accountNumber(accountNumber).build());
 		accountService.addTransaction(transaction);
 		return new ResponseEntity<>(HttpStatus.CREATED);
