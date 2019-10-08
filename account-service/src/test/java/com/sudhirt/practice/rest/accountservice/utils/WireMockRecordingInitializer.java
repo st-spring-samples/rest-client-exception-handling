@@ -1,56 +1,39 @@
 package com.sudhirt.practice.rest.accountservice.utils;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-import lombok.experimental.UtilityClass;
-import java.io.File;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class WireMockRecordingInitializer {
 
+	private static final String TARGET_FOLDER = "target/generated-test-sources/wiremock";
+
 	public static WireMockServer initialize(int port) throws IOException {
-		String tmpFolder = System.getProperty("java.io.tmpdir");
-		if (!cleanupIfExists(Paths.get(tmpFolder + "/mappings"))) {
-			File mappingsDirectory = new File(tmpFolder, "mappings");
-			mappingsDirectory.mkdir();
-		}
+		createDirectories();
 		WireMockServer wireMockServer = new WireMockServer(
-				options().port(port + 1).usingFilesUnderDirectory(tmpFolder));
+				options().port(port + 1).usingFilesUnderDirectory(Paths.get(TARGET_FOLDER).toString()));
 		wireMockServer.start();
 		wireMockServer.startRecording("http://localhost:" + port);
 		return wireMockServer;
 	}
 
-	public static void teardown(WireMockServer wireMockServer) {
-		wireMockServer.stopRecording();
-		wireMockServer.stop();
+	private void createDirectories() {
 		try {
-			// Pause a moment to make sure wiremock server is stopped
-			Thread.sleep(1000L);
+			Files.createDirectories(Paths.get(TARGET_FOLDER, "mappings"));
+			Files.createDirectories(Paths.get(TARGET_FOLDER, "__files"));
 		}
-		catch (InterruptedException var2) {
-			throw new RuntimeException(var2);
+		catch (IOException e) {
+			throw new RuntimeException("Error occurred while creating wiremock directories ", e);
 		}
 	}
 
-	private static boolean cleanupIfExists(Path path) throws IOException {
-		if (Files.exists(path)) {
-			Files.list(path).forEach(p -> {
-				try {
-					Files.deleteIfExists(p);
-				}
-				catch (IOException e) {
-					throw new RuntimeException("Unable to cleanup mappings directory");
-				}
-			});
-			return true;
-		}
-		return false;
+	public static void teardown(WireMockServer wireMockServer) {
+		wireMockServer.stopRecording();
+		wireMockServer.stop();
 	}
 
 }
